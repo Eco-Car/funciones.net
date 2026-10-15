@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio Práctico Excel: BUSCARV y BUSCARX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        excel: {
+                            dark: '#0a2f1d',
+                            sidebar: '#0d3823',
+                            sidebarActive: '#134e32',
+                            accent: '#107c41',
+                            accentHover: '#0b5c30'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid #107c41;
+            color: #107c41;
+            font-weight: 600;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <div id="welcome-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-200 text-center space-y-6">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-sm">
+                <i class="fa-solid fa-file-excel"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-900">Laboratorio BUSCARV y BUSCARX</h2>
+                <p class="text-sm text-slate-500 mt-1">Ingresa tu nombre completo para comenzar tu práctica interactiva.</p>
+            </div>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre del Estudiante</label>
+                    <input type="text" id="user-name-input" placeholder="Ej: María Fernández" 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-slate-800 font-medium outline-none transition-all">
+                </div>
+                <button onclick="startApp()" 
+                    class="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-2">
+                    <span>Ingresar al Laboratorio</span>
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col md:flex-row h-screen overflow-hidden">
+        
+        <!-- SIDEBAR VERDE -->
+        <aside class="w-full md:w-80 bg-[#0d3823] text-white flex flex-col justify-between shrink-0 shadow-xl">
+            <div>
+                <!-- Header del Sidebar -->
+                <div class="p-6 border-b border-emerald-900/60 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-900/50">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide text-white">Excel <span class="text-emerald-400">Búsqueda</span></h1>
+                        <p class="text-xs text-emerald-300/70 uppercase tracking-widest font-medium mt-0.5">Laboratorio Práctico</p>
+                    </div>
+                </div>
+
+                <!-- Nivel Badge -->
+                <div class="px-6 pt-6 pb-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/60 border border-emerald-800/50 px-3 py-1 rounded-full">
+                        Nivel: Funciones de Búsqueda
+                    </span>
+                </div>
+
+                <!-- Menú de Navegación -->
+                <nav class="mt-3 space-y-1 px-3" id="navigation-list">
+                    <!-- Dinámico por JS -->
+                </nav>
+            </div>
+
+            <!-- Footer Sidebar: Progreso y Tutor -->
+            <div class="p-6 border-t border-emerald-900/60 bg-emerald-950/40">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center text-xs font-semibold mb-2">
+                        <span class="text-emerald-300/80 uppercase tracking-wider">Tu Progreso</span>
+                        <span id="progress-text" class="text-emerald-300 font-mono">0 / 6</span>
+                    </div>
+                    <div class="w-full bg-emerald-950 h-2 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-emerald-300/70 pt-2 border-t border-emerald-900/40">
+                    <span>Instructor:</span>
+                    <span class="font-semibold text-emerald-200">Lic. Wilber López</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-1 bg-slate-50 overflow-y-auto flex flex-col">
+            
+            <!-- CONTENEDOR DE LECCIONES -->
+            <div id="lesson-container" class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full">
+                
+                <!-- Encabezado del Tema -->
+                <div class="mb-6">
+                    <span id="topic-badge" class="inline-block text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full mb-2">
+                        BUSCARV • Ejercicio 1
+                    </span>
+                    <h2 id="topic-title" class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        1. La Función BUSCARV
+                    </h2>
+                </div>
+
+                <!-- PESTAÑAS (Lectura Teórica / Práctica en Hoja) -->
+                <div class="flex border-b border-slate-200 mb-6 bg-slate-200/50 p-1 rounded-xl max-w-md">
+                    <button id="tab-theory" onclick="switchTab('theory')" 
+                        class="tab-btn active flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Lectura Teórica</span>
+                    </button>
+                    <button id="tab-practice" onclick="switchTab('practice')" 
+                        class="tab-btn flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-600">
+                        <i class="fa-solid fa-table-cells"></i>
+                        <span>Práctica en Hoja</span>
+                    </button>
+                </div>
+
+                <!-- CONTENIDO: TEORÍA -->
+                <div id="content-theory" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 md:p-8 space-y-6">
+                    <!-- Inyectado por JS -->
+                </div>
+
+                <!-- CONTENIDO: PRÁCTICA EN HOJA (ESTILO IDÉNTICO A IMAGEN DE REFERENCIA) -->
+                <div id="content-practice" class="hidden space-y-6">
+                    
+                    <!-- Tarjeta de Instrucción con borde verde -->
+                    <div class="bg-white border-l-4 border-emerald-600 rounded-xl p-4 shadow-sm flex items-start gap-3 text-slate-800 text-sm">
+                        <i class="fa-solid fa-list-check text-emerald-600 mt-0.5 text-base"></i>
+                        <div>
+                            <p class="font-bold text-slate-900">Instrucción:</p>
+                            <p id="practice-instructions" class="text-slate-600 mt-0.5">Escribe la fórmula exacta en la celda requerida.</p>
+                        </div>
+                    </div>
+
+                    <!-- SIMULADOR EXCEL CON BARRA DE FÓRMULAS IDÉNTICA -->
+                    <div class="bg-white border border-slate-300 rounded-xl overflow-hidden shadow-sm">
+                        
+                        <!-- Barra de fórmulas superior estilo Excel -->
+                        <div class="bg-slate-100 border-b border-slate-300 p-3 flex items-center gap-3">
+                            <div class="bg-white border border-slate-300 px-3 py-1 rounded font-bold text-slate-700 text-xs font-mono shadow-sm" id="active-cell-ref">D2</div>
+                            <div class="text-slate-400 font-bold italic font-mono text-sm">fx</div>
+                            <input type="text" id="user-formula-input" placeholder="Escribe la fórmula aquí..." 
+                                oninput="syncFormulaBar(this.value)"
+                                class="flex-1 bg-white border border-slate-300 px-3 py-1 rounded font-mono text-sm text-slate-800 focus:outline-none focus:border-emerald-600">
+                            <button onclick="checkAnswer()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-1.5 rounded-lg font-semibold text-sm flex items-center gap-1.5 shadow transition-all">
+                                <i class="fa-solid fa-check"></i> Validar
+                            </button>
+                        </div>
+
+                        <!-- Tabla Grid Excel -->
+                        <div class="overflow-x-auto p-4 bg-slate-50">
+                            <div id="excel-grid" class="inline-block min-w-full">
+                                <!-- Inyectado por JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje de Feedback -->
+                    <div id="feedback-message" class="text-sm font-medium hidden p-4 rounded-xl border"></div>
+
+                </div>
+
+            </div>
+
+            <!-- PANTALLA DE CERTIFICADO DE FINALIZACIÓN -->
+            <div id="certificate-screen" class="hidden flex-1 p-6 md:p-12 max-w-4xl mx-auto w-full my-auto flex flex-col items-center justify-center">
+                <div class="bg-white border-8 double border-emerald-800 p-8 md:p-12 rounded-2xl shadow-2xl text-center relative overflow-hidden w-full max-w-3xl">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
+
+                    <div class="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-sm border-2 border-emerald-300">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+
+                    <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Certificado Oficial de Finalización</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-1 mb-2">Excel Búsqueda Avanzada</h2>
+                    <p class="text-slate-500 text-sm max-w-lg mx-auto">Otorgado por haber superado exitosamente el laboratorio práctico interactivo de funciones <span class="font-bold text-slate-700">BUSCARV</span> y <span class="font-bold text-slate-700">BUSCARX</span>.</p>
+
+                    <div class="my-8 py-6 border-y border-slate-200">
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Este reconocimiento se otorga a:</p>
+                        <h3 id="cert-user-name" class="text-2xl md:text-4xl font-black text-emerald-700 mt-2 font-sans tracking-tight">Estudiante</h3>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 max-w-md mx-auto pt-2">
+                        <div class="text-left">
+                            <span class="block font-bold text-slate-700">Puntuación:</span>
+                            <span>100% Competencias Superadas</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block font-bold text-slate-700">Fecha de Emisión:</span>
+                            <span id="cert-date">14/10/2026</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div class="text-left">
+                            <p class="text-[10px] uppercase font-mono text-slate-400">Código de Verificación</p>
+                            <p class="text-xs font-mono font-bold text-slate-700">EXCEL-BUSQ-2026-OK</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> Aprobado con Excelencia
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="window.print()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Imprimir Certificado</span>
+                    </button>
+                    <button onclick="restartCourse()" class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Reiniciar Laboratorio</span>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let userName = "Estudiante";
+        let currentTopicIndex = 0;
+        let activeTab = "theory";
+        let completedTopics = [false, false, false, false, false, false];
+
+        const topics = [
+            // --- BUSCARV ---
+            {
+                id: 1,
+                badge: "BUSCARV • Ejercicio 1",
+                title: "1. La Función BUSCARV (Búsqueda Básica)",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        La función <strong class="text-slate-900 font-semibold">BUSCARV</strong> busca un valor en la <strong class="text-slate-900 font-semibold">primera columna</strong> de un rango y devuelve un valor en la misma fila desde otra columna.
+                    </p>
+                    <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-r-xl text-emerald-900 text-sm flex items-start gap-3">
+                        <i class="fa-solid fa-lightbulb text-emerald-600 text-base mt-0.5"></i>
+                        <div>
+                            <strong>REGLA CLAVE:</strong> El valor buscado SIEMPRE debe encontrarse en la primera columna del rango seleccionado.
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-slate-900">Sintaxis:</h4>
+                        <div class="bg-slate-900 text-emerald-400 font-mono p-4 rounded-xl text-sm shadow-inner">
+                            =BUSCARV(valor_buscado; matriz_buscar_en; indicador_columnas; [ordenado])
+                        </div>
+                    </div>
+                `,
+                instructions: "Usa BUSCARV para obtener el <b>Precio</b> del producto 'A101' (Laptop Gamer) buscando en el rango A2:C4. La columna de Precio es la 3. Escribe la fórmula en C8.",
+                headers: ["A (Código)", "B (Producto)", "C (Precio)"],
+                gridData: [
+                    ["A101", "Laptop Gamer", "$1,200"],
+                    ["A102", "Teclado Mecánico", "$85"],
+                    ["A103", "Monitor 27\"", "$320"]
+                ],
+                targetCell: { row: 8, col: 'C', ref: 'C8', label: 'Precio Buscado' },
+                targetFormula: '=BUSCARV("A101"; A2:C4; 3; FALSO)',
+                acceptedFormulas: [
+                    '=BUSCARV("A101";A2:C4;3;FALSO)',
+                    '=BUSCARV("A101"; A2:C4; 3; 0)',
+                    '=BUSCARV("A101";A2:C4;3;0)',
+                    '=BUSCARV(A2; A2:C4; 3; FALSO)',
+                    '=BUSCARV(A2;A2:C4;3;FALSO)',
+                    '=BUSCARV(A2; A2:C4; 3; 0)'
+                ],
+                correctValue: "$1,200"
+            },
+            {
+                id: 2,
+                badge: "BUSCARV • Ejercicio 2",
+                title: "2. Coincidencia Exacta con BUSCARV",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        El cuarto argumento <code class="bg-slate-100 px-1 rounded text-emerald-700 font-semibold">FALSO</code> (o <code class="bg-slate-100 px-1 rounded text-emerald-700 font-semibold">0</code>) es fundamental para exigirle a Excel una <strong class="text-slate-900 font-semibold">coincidencia exacta</strong>.
+                    </p>
+                    <div class="bg-slate-900 text-emerald-400 font-mono p-4 rounded-xl text-sm shadow-inner">
+                        =BUSCARV("E-02"; A2:C4; 2; FALSO)
+                    </div>
+                `,
+                instructions: "Busca el nombre del empleado con ID 'E-02' (Columna B) usando BUSCARV en el rango A2:C4. Columna de Nombre es la 2. Escribe la fórmula en B8.",
+                headers: ["A (ID)", "B (Nombre)", "C (Depto)"],
+                gridData: [
+                    ["E-01", "Carlos Ruiz", "Sistemas"],
+                    ["E-02", "Ana Morales", "Contabilidad"],
+                    ["E-03", "Roberto Gómez", "Ventas"]
+                ],
+                targetCell: { row: 8, col: 'B', ref: 'B8', label: 'Nombre Encontrado' },
+                targetFormula: '=BUSCARV("E-02"; A2:C4; 2; FALSO)',
+                acceptedFormulas: [
+                    '=BUSCARV("E-02";A2:C4;2;FALSO)',
+                    '=BUSCARV("E-02"; A2:C4; 2; 0)',
+                    '=BUSCARV(A3; A2:C4; 2; FALSO)',
+                    '=BUSCARV(A3;A2:C4;2;0)'
+                ],
+                correctValue: "Ana Morales"
+            },
+            {
+                id: 3,
+                badge: "BUSCARV • Ejercicio 3",
+                title: "3. Limitación de BUSCARV",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        Recuerda que BUSCARV <strong class="text-rose-600">solo busca de izquierda a derecha</strong>. Si tu clave está en la columna A y el dato a extraer está a la derecha, BUSCARV lo resuelve con el número de columna.
+                    </p>
+                `,
+                instructions: "Obtén el <b>Stock</b> del SKU 'SKU-55' usando BUSCARV en A2:C4 (Stock está en la 3ª columna). Escribe la fórmula en C8.",
+                headers: ["A (SKU)", "B (Artículo)", "C (Stock)"],
+                gridData: [
+                    ["SKU-10", "Silla Ergonómica", "15"],
+                    ["SKU-55", "Escritorio Elevable", "8"],
+                    ["SKU-90", "Lámpara LED", "42"]
+                ],
+                targetCell: { row: 8, col: 'C', ref: 'C8', label: 'Stock Obtenido' },
+                targetFormula: '=BUSCARV("SKU-55"; A2:C4; 3; FALSO)',
+                acceptedFormulas: [
+                    '=BUSCARV("SKU-55";A2:C4;3;FALSO)',
+                    '=BUSCARV("SKU-55"; A2:C4; 3; 0)',
+                    '=BUSCARV(A3; A2:C4; 3; FALSO)',
+                    '=BUSCARV(A3;A2:C4;3;0)'
+                ],
+                correctValue: "8"
+            },
+
+            // --- BUSCARX ---
+            {
+                id: 4,
+                badge: "BUSCARX • Ejercicio 4",
+                title: "4. La Función BUSCARX (Búsqueda Bidireccional)",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        La función <strong class="text-slate-900 font-semibold">BUSCARX</strong> permite buscar en <strong class="text-slate-900 font-semibold">cualquier dirección</strong> (izquierda o derecha) sin depender de números de columnas fijos.
+                    </p>
+                    <div class="bg-slate-900 text-cyan-400 font-mono p-4 rounded-xl text-sm shadow-inner">
+                        =BUSCARX(valor_buscado; matriz_busqueda; matriz_devuelta)
+                    </div>
+                `,
+                instructions: "El ID está en B. Usa BUSCARX para buscar 'ID-300' en B2:B4 y devolver el <b>Nombre</b> de A2:A4 (hacia la izquierda). Escribe la fórmula en A8.",
+                headers: ["A (Nombre)", "B (ID)", "C (Rol)"],
+                gridData: [
+                    ["Laura Pausini", "ID-100", "Editor"],
+                    ["Mateo Salvini", "ID-300", "Administrador"],
+                    ["Sofia Loren", "ID-500", "Soporte"]
+                ],
+                targetCell: { row: 8, col: 'A', ref: 'A8', label: 'Nombre Encontrado' },
+                targetFormula: '=BUSCARX("ID-300"; B2:B4; A2:A4)',
+                acceptedFormulas: [
+                    '=BUSCARX("ID-300";B2:B4;A2:A4)',
+                    '=BUSCARX(B3; B2:B4; A2:A4)',
+                    '=BUSCARX(B3;B2:B4;A2:A4)'
+                ],
+                correctValue: "Mateo Salvini"
+            },
+            {
+                id: 5,
+                badge: "BUSCARX • Ejercicio 5",
+                title: "5. Control de Errores con BUSCARX",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        BUSCARX incluye un argumento opcional <code class="bg-slate-100 px-1 rounded text-emerald-700 font-semibold">[si_no_se_encuentra]</code> para manejar valores faltantes limpiamente.
+                    </p>
+                    <div class="bg-slate-900 text-cyan-400 font-mono p-4 rounded-xl text-sm shadow-inner">
+                        =BUSCARX("C-99"; A2:A4; B2:B4; "No Encontrado")
+                    </div>
+                `,
+                instructions: "Busca 'C-99' en A2:A4 para traer su Precio de B2:B4. Si no se encuentra, muestra 'No Encontrado'. Escribe la fórmula en B8.",
+                headers: ["A (Código)", "B (Precio)"],
+                gridData: [
+                    ["C-01", "$15.00"],
+                    ["C-02", "$30.00"],
+                    ["C-03", "$45.00"]
+                ],
+                targetCell: { row: 8, col: 'B', ref: 'B8', label: 'Resultado BUSCARX' },
+                targetFormula: '=BUSCARX("C-99"; A2:A4; B2:B4; "No Encontrado")',
+                acceptedFormulas: [
+                    '=BUSCARX("C-99";A2:A4;B2:B4;"No Encontrado")',
+                    '=BUSCARX("C-99"; A2:A4; B2:B4; "No encontrado")',
+                    '=BUSCARX("C-99";A2:A4;B2:B4;"No encontrado")'
+                ],
+                correctValue: "No Encontrado"
+            },
+            {
+                id: 6,
+                badge: "BUSCARX • Ejercicio 6",
+                title: "6. Ventaja Estructural de BUSCARX",
+                theoryHTML: `
+                    <p class="text-slate-600 leading-relaxed">
+                        Al referenciar rangos independientes (<code class="bg-slate-100 px-1 rounded text-slate-800">A2:A4</code> y <code class="bg-slate-100 px-1 rounded text-slate-800">C2:C4</code>), si insertas columnas en tu hoja de Excel, <strong class="text-emerald-700">BUSCARX no se rompe</strong>.
+                    </p>
+                `,
+                instructions: "Usa BUSCARX para buscar la ciudad 'Madrid' en A2:A4 y devolver su <b>Temperatura</b> de C2:C4. Escribe la fórmula en C8.",
+                headers: ["A (Ciudad)", "B (País)", "C (Temperatura)"],
+                gridData: [
+                    ["San Salvador", "El Salvador", "31°C"],
+                    ["Madrid", "España", "22°C"],
+                    ["Buenos Aires", "Argentina", "18°C"]
+                ],
+                targetCell: { row: 8, col: 'C', ref: 'C8', label: 'Temperatura' },
+                targetFormula: '=BUSCARX("Madrid"; A2:A4; C2:C4)',
+                acceptedFormulas: [
+                    '=BUSCARX("Madrid";A2:A4;C2:C4)',
+                    '=BUSCARX(A3; A2:A4; C2:C4)',
+                    '=BUSCARX(A3;A2:A4;C2:C4)'
+                ],
+                correctValue: "22°C"
+            }
+        ];
+
+        function startApp() {
+            const input = document.getElementById('user-name-input');
+            if (!input.value.trim()) {
+                alert("Por favor ingresa tu nombre completo.");
+                return;
+            }
+            userName = input.value.trim();
+            document.getElementById('welcome-modal').classList.add('hidden');
+            
+            renderNavigation();
+            loadTopic(0);
+        }
+
+        function renderNavigation() {
+            const navList = document.getElementById('navigation-list');
+            navList.innerHTML = '';
+
+            topics.forEach((topic, index) => {
+                const isActive = index === currentTopicIndex;
+                const isCompleted = completedTopics[index];
+
+                const navBtn = document.createElement('button');
+                navBtn.onclick = () => loadTopic(index);
+                navBtn.className = `w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-between group ${
+                    isActive 
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 font-semibold' 
+                        : 'text-emerald-200/70 hover:bg-emerald-900/40 hover:text-white'
+                }`;
+
+                navBtn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 rounded-full border ${
+                            isCompleted 
+                                ? 'bg-emerald-400 border-emerald-400 text-slate-950' 
+                                : isActive ? 'border-white' : 'border-emerald-700'
+                        } flex items-center justify-center text-[10px] font-bold">
+                            ${isCompleted ? '<i class="fa-solid fa-check"></i>' : (index + 1)}
+                        </div>
+                        <span class="truncate max-w-[170px]">${topic.title.split('. ')[1]}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                `;
+
+                navList.appendChild(navBtn);
+            });
+
+            const completedCount = completedTopics.filter(Boolean).length;
+            document.getElementById('progress-text').innerText = `${completedCount} / ${topics.length}`;
+            document.getElementById('progress-bar').style.width = `${(completedCount / topics.length) * 100}%`;
+
+            if (completedCount === topics.length) {
+                showCertificate();
+            }
+        }
+
+        function loadTopic(index) {
+            currentTopicIndex = index;
+            const topic = topics[index];
+
+            document.getElementById('lesson-container').classList.remove('hidden');
+            document.getElementById('certificate-screen').classList.add('hidden');
+
+            document.getElementById('topic-badge').innerText = topic.badge;
+            document.getElementById('topic-title').innerText = topic.title;
+            document.getElementById('content-theory').innerHTML = topic.theoryHTML;
+            document.getElementById('practice-instructions').innerHTML = topic.instructions;
+
+            renderExcelGrid(topic);
+            renderNavigation();
+            switchTab('theory');
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            const theoryBtn = document.getElementById('tab-theory');
+            const practiceBtn = document.getElementById('tab-practice');
+            const theoryContent = document.getElementById('content-theory');
+            const practiceContent = document.getElementById('content-practice');
+
+            if (tab === 'theory') {
+                theoryBtn.classList.add('active');
+                practiceBtn.classList.remove('active');
+                theoryContent.classList.remove('hidden');
+                practiceContent.classList.add('hidden');
+            } else {
+                practiceBtn.classList.add('active');
+                theoryBtn.classList.remove('active');
+                practiceContent.classList.remove('hidden');
+                theoryContent.classList.add('hidden');
+            }
+        }
+
+        function renderExcelGrid(topic) {
+            const gridContainer = document.getElementById('excel-grid');
+            const numCols = topic.headers.length;
+            const cols = Array.from({ length: numCols }, (_, i) => String.fromCharCode(65 + i));
+
+            let html = `<table class="excel-table w-full border-collapse border border-slate-300 text-sm font-mono">`;
+
+            html += `<tr class="bg-slate-200 text-slate-600 text-center font-bold">`;
+            html += `<td class="border border-slate-300 w-10 py-1 text-xs bg-slate-300/50">#</td>`;
+            topic.headers.forEach(h => {
+                html += `<td class="border border-slate-300 px-4 py-1 text-xs">${h}</td>`;
+            });
+            html += `</tr>`;
+
+            topic.gridData.forEach((row, rIdx) => {
+                html += `<tr class="bg-white">`;
+                html += `<td class="border border-slate-300 text-center text-xs font-bold bg-slate-100 text-slate-500">${rIdx + 2}</td>`;
+                row.forEach(cell => {
+                    html += `<td class="border border-slate-300 px-4 py-2 text-slate-700">${cell}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `<tr class="bg-white"><td class="border border-slate-300 text-center text-xs bg-slate-100 text-slate-400">5</td>`;
+            for (let i = 0; i < numCols; i++) {
+                html += `<td class="border border-slate-300 p-2"></td>`;
+            }
+            html += `</tr>`;
+            
+            const target = topic.targetCell;
+            html += `<tr class="bg-emerald-50/50">`;
+            html += `<td class="border border-slate-300 text-center text-xs font-bold bg-emerald-100 text-emerald-900">${target.row}</td>`;
+            
+            cols.forEach(col => {
+                if (col === target.col) {
+                    html += `
+                        <td class="border-2 border-emerald-600 bg-white p-0 relative shadow-inner">
+                            <input type="text" id="user-formula-input-grid" 
+                                placeholder="${target.label}..." 
+                                oninput="syncFormulaBarFromGrid(this.value)"
+                                class="w-full px-3 py-2 font-mono text-sm text-emerald-950 font-semibold focus:outline-none bg-transparent">
+                        </td>
+                    `;
+                } else {
+                    html += `<td class="border border-slate-300 p-2 text-slate-400 text-xs italic">Resultado...</td>`;
+                }
+            });
+
+            html += `</tr></table>`;
+            gridContainer.innerHTML = html;
+
+            document.getElementById('active-cell-ref').innerText = target.ref;
+            document.getElementById('user-formula-input').value = "";
+            document.getElementById('feedback-message').classList.add('hidden');
+        }
+
+        function syncFormulaBar(val) {
+            const gridInput = document.getElementById('user-formula-input-grid');
+            if (gridInput) gridInput.value = val;
+        }
+
+        function syncFormulaBarFromGrid(val) {
+            const topInput = document.getElementById('user-formula-input');
+            if (topInput) topInput.value = val;
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('user-formula-input');
+            if (!input) return;
+
+            const userVal = input.value.trim().toUpperCase().replace(/\s+/g, ' ');
+            const topic = topics[currentTopicIndex];
+            const feedback = document.getElementById('feedback-message');
+
+            const isCorrect = topic.acceptedFormulas.some(f => f.toUpperCase().replace(/\s+/g, ' ') === userVal);
+
+            feedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                feedback.className = "text-sm font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between gap-2";
+                feedback.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-base text-emerald-600"></i>
+                        <span>¡Excelente! Resultado obtenido: <b>${topic.correctValue}</b>. ¡Puedes avanzar al siguiente ejercicio!</span>
+                    </div>
+                    <button onclick="nextTopic()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow transition-all flex items-center gap-1.5 shrink-0">
+                        <span>Siguiente</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                `;
+                
+                input.value = topic.correctValue;
+                input.disabled = true;
+                const gridInput = document.getElementById('user-formula-input-grid');
+                if(gridInput) {
+                    gridInput.value = topic.correctValue;
+                    gridInput.disabled = true;
+                }
+
+                completedTopics[currentTopicIndex] = true;
+                renderNavigation();
+            } else {
+                feedback.className = "text-sm font-semibold text-rose-800 bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-center gap-2";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-base text-rose-600"></i> <span>Fórmula incorrecta. Un ejemplo de fórmula esperada es: <code class="bg-white px-2 py-0.5 rounded border border-rose-200 font-mono">${topic.targetFormula}</code></span>`;
+            }
+        }
+
+        function nextTopic() {
+            if (currentTopicIndex < topics.length - 1) {
+                loadTopic(currentTopicIndex + 1);
+            } else {
+                showCertificate();
+            }
+        }
+
+        function showCertificate() {
+            document.getElementById('lesson-container').classList.add('hidden');
+            document.getElementById('certificate-screen').classList.remove('hidden');
+
+            document.getElementById('cert-user-name').innerText = userName;
+            const now = new Date();
+            document.getElementById('cert-date').innerText = now.toLocaleDateString('es-ES');
+        }
+
+        function restartCourse() {
+            completedTopics = [false, false, false, false, false, false];
+            currentTopicIndex = 0;
+            renderNavigation();
+            loadTopic(0);
+        }
+    </script>
+</body>
+</html>
